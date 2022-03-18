@@ -1,0 +1,114 @@
+{% extends "restaurant/base.html" %}
+{# テンプレートの継承を行う #}  
+{% load static %}
+
+
+{# カスタムテンプレートタグのファイルを読み込み。これでファイル内に書いたカスタムテンプレートタグが実行できる。 #}
+{% load param_change %}
+
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+
+<script>
+    const datas = [
+        { "lat":{{ restaurant.lat }},"lon":{{ restaurant.lon }},"name":"{{ restaurant.name }}","icon":"{{ restaurant.category.icon.url }}" },
+    ]
+</script>
+<script src="{% static 'restaurant/js/script.js' %}"></script>
+{% endblock %}
+
+{% block main %}
+
+<div class="row m-0">
+    <div class="col">
+        <div id="map"></div>
+    </div>
+    <div class="col content_area">
+        <div class="border">
+            <h2 class="restaurant_header">{{ restaurant.name }}</h2>
+            <div>
+                <img src="{{ restaurant.image.url }}" alt="画像">
+            </div>
+            <div>{{ restaurant.description|linebreaksbr|urlize }}</div>
+            <div>
+                <div>{{ restaurant.ip }}</div>
+            </div>
+        </div>
+
+        <h2>この飲食店にレビューを投稿する</h2>
+        <form action="" method="POST">
+            {% csrf_token %}
+
+            <input id="star_radio_1" type="radio" name="star" value="1">
+            <input id="star_radio_2" type="radio" name="star" value="2">
+            <input id="star_radio_3" type="radio" name="star" value="3">
+            <input id="star_radio_4" type="radio" name="star" value="4">
+            <input id="star_radio_5" type="radio" name="star" value="5">
+
+            <div class="star_radio_label_area">
+                <div class="star_radio_label_flex">
+                    <label class="star_radio_label" for="star_radio_5"><div class="true_star" ><i class="fas fa-star"></i></div><div class="false_star"><i class="far fa-star"></i></div></label>
+                    <label class="star_radio_label" for="star_radio_4"><div class="true_star" ><i class="fas fa-star"></i></div><div class="false_star"><i class="far fa-star"></i></div></label>
+                    <label class="star_radio_label" for="star_radio_3"><div class="true_star" ><i class="fas fa-star"></i></div><div class="false_star"><i class="far fa-star"></i></div></label>
+                    <label class="star_radio_label" for="star_radio_2"><div class="true_star" ><i class="fas fa-star"></i></div><div class="false_star"><i class="far fa-star"></i></div></label>
+                    <label class="star_radio_label" for="star_radio_1"><div class="true_star" ><i class="fas fa-star"></i></div><div class="false_star"><i class="far fa-star"></i></div></label>
+                </div>
+            </div>
+
+
+            <input class="form-control" type="text" name="title" maxlength="100" placeholder="タイトル">
+            <textarea class="form-control" name="content" maxlength="1000" placeholder="本文"></textarea>
+
+            <input class="btn btn-outline-success" type="submit" value="送信">
+        </form>
+
+        <h2>この飲食店に投稿されたレビュー</h2>
+
+        <div class="review_area">
+            {% for review in reviews %}
+            <div class="review">
+                <h3 class="review_title">{{ review.title }}</h3>
+                {% with test=""|center:review.star %}
+                <div class="review_star">{% for t in test %}<i class="fas fa-star"></i>{% endfor %}</div>
+                {% endwith %}
+                <div class="review_dt">{{ review.dt }}</div>
+                <div class="review_content">{{ review.content|linebreaksbr }}</div>
+                <div class="review_ip">{{ review.ip }}</div>
+            </div>
+            {% endfor %}
+
+            {# ここでページネーションを実装させる #}
+
+            <ul class="pagination justify-content-center">
+                {# 前のページがあるかどうかの判定。ある場合はTrue、ない場合はFalse #}
+                {% if reviews.has_previous %}
+                {# {% url_replace [リクエストオブジェクト] [書き換えたいキー] [書き換えたい値] %} #}
+                <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' reviews.previous_page_number %}">前のページ</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link">前のページ</a></li>
+                {% endif %}
+
+                <li class="page-item"><a class="page-link">{{ reviews.number }}</a></li>
+
+                {# 次のページがあるかどうかの判定。ある場合はTrue、ない場合はFalse #}
+                {% if reviews.has_next %}
+                <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' reviews.next_page_number %}">次のページ</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link">次のページ</a></li>
+                {% endif %}
+            </ul>
+
+
+        </div>
+    </div>
+
+
+</div>
+
+
+
+{% endblock %}
+

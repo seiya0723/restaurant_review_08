@@ -1,0 +1,103 @@
+{% extends "restaurant/base.html" %}
+{# テンプレートの継承を行う #}
+{% load static %}
+
+{# カスタムテンプレートタグのファイルを読み込み。これでファイル内に書いたカスタムテンプレートタグが実行できる。 #}
+{% load param_change %}
+
+
+{% block extra_head %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+<script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+
+<script>
+    const datas = [
+        {% for restaurant in restaurants %}
+        { "lat":{{ restaurant.lat }},"lon":{{ restaurant.lon }},"name":"{{ restaurant.name }}","icon":"{{ restaurant.category.icon.url }}"  },
+        {% endfor %}
+    ]
+</script>
+<script src="{% static 'restaurant/js/script.js' %}"></script>
+{% endblock %}
+
+
+{% block main %}
+{# TODO:ここはBootstrapを廃止してdisplay:flexにする。レスポンシブデザインに #}
+<div class="row m-0 map_content_area">
+    <div class="col map_area">
+        <div id="map"></div>
+    </div>
+    <div class="col content_area">
+
+        <a class="btn btn-outline-primary" href="{% url 'restaurant:restaurant_create' %}">飲食店を登録する</a>
+        <a class="btn btn-outline-secondary" href="{% url 'restaurant:contact' %}">お問い合わせ</a>
+
+
+        {# TODO:次回？ここで投稿に成功したら、投稿成功と表示させる(django messageframeworkを使う) #}
+        {# https://noauto-nolife.com/post/django-message-framework/ #}
+
+
+        <form action="" method="GET">
+            <div class="input-group my-2">
+                <input class="form-control" type="text" name="search" placeholder="キーワード検索" value="{{ request.GET.search }}">
+                <div class="input-group-append">
+                    <input class="form-control btn btn-outline-primary" type="submit" value="検索">
+                </div>
+            </div>
+        </form>
+
+        {% for restaurant in restaurants %}
+        <div class="border my-2">
+
+            <h2 class="restaurant_header">
+                <a class="restaurant_header_link" href="{% url 'restaurant:single' restaurant.id %}">{{ restaurant.name }}</a>
+            </h2>
+
+            <div>
+                <img src="{{ restaurant.image.url }}" alt="">
+            </div>
+
+            <div>所在地:{{ restaurant.prefecture }} {{ restaurant.city }} {{ restaurant.address }}</div>
+
+            <div>{{ restaurant.description|truncatechars_html:300 }}</div>
+
+            <div>
+                <div>{{ restaurant.ip }}</div>
+            </div>
+            <div class="text-right">
+                <a class="btn btn-outline-success" href="{% url 'restaurant:single' restaurant.id %}">この飲食店にレビューする</a>
+            </div>
+
+        </div>
+        {% endfor %}
+
+        <ul class="pagination justify-content-center">
+            {# 前のページがあるかどうかの判定。ある場合はTrue、ない場合はFalse #}
+            {% if restaurants.has_previous %}
+            {# {% url_replace [リクエストオブジェクト] [書き換えたいキー] [書き換えたい値] %} #}
+            <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' restaurants.previous_page_number %}">前のページ</a></li>
+            {# <li class="page-item"><a class="page-link" href="?page={{ restaurants.previous_page_number }}">前のページ</a></li> #}
+            {% else %}
+            <li class="page-item"><a class="page-link">前のページ</a></li>
+            {% endif %}
+
+            <li class="page-item"><a class="page-link">{{ restaurants.number }}</a></li>
+
+            {# 次のページがあるかどうかの判定。ある場合はTrue、ない場合はFalse #}
+            {% if restaurants.has_next %}
+            {# <li class="page-item"><a class="page-link" href="?page={{ restaurants.next_page_number }}">次のページ</a></li> #}
+            <li class="page-item"><a class="page-link" href="?{% url_replace request 'page' restaurants.next_page_number %}">次のページ</a></li>
+            {% else %}
+            <li class="page-item"><a class="page-link">次のページ</a></li>
+            {% endif %}
+        </ul>
+
+    </div>
+</div>
+
+
+
+{% endblock %}
+

@@ -1,0 +1,24 @@
+{% extends "restaurant/base.html" %}
+
+{% block extra_head %}
+{% endblock %}
+
+
+{% block main %}
+<div class="container">
+
+    <h2>お問い合わせ</h2>
+
+    <div>あなたのIPアドレス ( {{ ip }} )</div>
+
+    <form action="" method="POST">
+        {% csrf_token %}
+        <input class="form-control" type="text" name="title" placeholder="お問い合わせタイトル">
+        <input class="form-control" type="text" name="email" placeholder="お問い合わせメールアドレス">
+        <textarea class="form-control" name="content" placeholder="お問い合わせ内容"></textarea>
+        <input class="form-control btn btn-outline-primary" type="submit" value="送信">
+    </form>
+
+</div>
+
+{% endblock %}
